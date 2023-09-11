@@ -6,6 +6,8 @@ let answerCounter = 0
 let slideIndex = 0
 const localStoragePointsKey = 'quiz-points'
 let localStoragePoints = 0
+let timer = document.querySelector('.timer')
+let countdown = null
 
 async function init(apiUrl) {
 
@@ -18,6 +20,7 @@ async function init(apiUrl) {
         })
         .then((dataFromApi) => {
             getPointsFromLocalStorage()
+            timerStart()
             renderQuestions(dataFromApi.results[slideIndex])
             nextSlide(dataFromApi)
         })
@@ -26,12 +29,11 @@ async function init(apiUrl) {
 }
 
 let renderQuestions = ({ question, correct_answer, incorrect_answers: [...allIncorrectAnswers] }) => {
+    console.log(question)
 
-    allAnswers = [correct_answer, ...allIncorrectAnswers]
+    let allAnswers = ([correct_answer, ...allIncorrectAnswers]).map((item, index) => {
 
-    allAnswers.forEach((item, index) => {
-
-        (index === 0) ? allAnswers[index] = { answer: item, isCorrect: true } : allAnswers[index] = { answer: item, isCorrect: false }
+        return { answer: item, isCorrect: (index === 0) }
 
     })
 
@@ -85,9 +87,11 @@ let nextSlide = (data) => {
         quiz.innerHTML = ""
 
         if (pageCounter < 10) {
+            timerStart()
             pageCounter += 1
+
             updateCounter(pageCounter, '.page-counter')
-            renderQuestions(data.results[slideIndex++])
+            renderQuestions(data.results[++slideIndex])
 
         }
         else {
@@ -121,6 +125,27 @@ let getPointsFromLocalStorage = () => {
     pointsFromLocalStorage === null ? pointsFromLocalStorage = 0 : localStoragePoints = parseInt(pointsFromLocalStorage)
 
 }
+
+let timerStart = () => {
+    clearInterval(countdown)
+    timer.innerHTML = `10 s`
+
+    let count = 10
+
+    countdown = setInterval(() => {
+
+        timer.innerHTML = `${count} s`
+        count--
+        if (count <= 0) {
+            clearInterval(countdown)
+            timer.innerHTML = `0 s`
+            quiz.innerHTML = `Times out`
+        }
+    }, 1000)
+
+
+}
+
 
 
 
