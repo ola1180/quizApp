@@ -1,9 +1,11 @@
-let quiz = document.querySelector('.quiz-data')
+const quiz = document.querySelector('.quiz-data')
 const apiUrl = 'https://opentdb.com/api.php?amount=10'
 const button = document.querySelector('.quizButton')
 let pageCounter = 1
 let answerCounter = 0
 let slideIndex = 0
+const localStoragePointsKey = 'quiz-points'
+let localStoragePoints = 0
 
 async function init(apiUrl) {
 
@@ -15,6 +17,7 @@ async function init(apiUrl) {
             throw new Error()
         })
         .then((dataFromApi) => {
+            getPointsFromLocalStorage()
             renderQuestions(dataFromApi.results[slideIndex])
             nextSlide(dataFromApi)
         })
@@ -22,27 +25,16 @@ async function init(apiUrl) {
 
 }
 
-function renderQuestions({ question, correct_answer, incorrect_answers: [...allIncorrectAnswers] }) {
+let renderQuestions = ({ question, correct_answer, incorrect_answers: [...allIncorrectAnswers] }) => {
 
     allAnswers = [correct_answer, ...allIncorrectAnswers]
 
     allAnswers.forEach((item, index) => {
-        // (index === 0) ? { answer: item, isCorrect: true } : { answer: item, isCorrect: false }
 
-        if (index === 0) {
-            return allAnswers[index] = {
-                answer: item,
-                isCorrect: true
-            }
-        }
-        else {
-            return allAnswers[index] = {
-                answer: item,
-                isCorrect: false
-            }
-        }
+        (index === 0) ? allAnswers[index] = { answer: item, isCorrect: true } : allAnswers[index] = { answer: item, isCorrect: false }
 
     })
+
 
     for (i = allAnswers.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (i + 1))
@@ -53,7 +45,6 @@ function renderQuestions({ question, correct_answer, incorrect_answers: [...allI
 
     let questionItem = document.createElement('h3')
     questionItem.textContent = question
-    console.log(questionItem)
 
     quiz.append(questionItem)
 
@@ -68,7 +59,7 @@ function renderQuestions({ question, correct_answer, incorrect_answers: [...allI
 
 }
 
-function checkAnswer(isCorrect, answerItem) {
+let checkAnswer = (isCorrect, answerItem) => {
 
     if (isCorrect) {
         answerItem.classList.add('correct-answer');
@@ -85,6 +76,7 @@ function checkAnswer(isCorrect, answerItem) {
         item.classList.add('not-allowed')
     })
 
+
 }
 
 let nextSlide = (data) => {
@@ -96,8 +88,13 @@ let nextSlide = (data) => {
             pageCounter += 1
             updateCounter(pageCounter, '.page-counter')
             renderQuestions(data.results[slideIndex++])
+
         }
-        else { quiz.innerHTML = `<h2>Quiz finished. Your score is ${answerCounter} / 10</h2>` }
+        else {
+            quiz.innerHTML = `<h2>Quiz finished. Your score is ${answerCounter} / 10</h2>`
+            updateLocalStorage(answerCounter)
+            button.classList.add('hidden')
+        }
 
     })
 
@@ -112,7 +109,19 @@ let updateCounter = (counter, counterContainer) => {
     if (counterElement) {
         counterElement.textContent = `${counter} / 10`;
     }
+}
+
+let updateLocalStorage = (points) => {
+    localStoragePoints += points
+    localStorage.setItem(localStoragePointsKey, localStoragePoints)
+}
+
+let getPointsFromLocalStorage = () => {
+    let pointsFromLocalStorage = localStorage.getItem(localStoragePointsKey)
+    pointsFromLocalStorage === null ? pointsFromLocalStorage = 0 : localStoragePoints = parseInt(pointsFromLocalStorage)
 
 }
+
+
 
 init(apiUrl)
