@@ -3,7 +3,6 @@ const apiUrl = 'https://opentdb.com/api.php?amount=10'
 const button = document.querySelector('.quizButton')
 let pageCounter = 1
 let answerCounter = 0
-let correctIndex = 0
 let slideIndex = 0
 
 async function init(apiUrl) {
