@@ -95,9 +95,12 @@ let nextSlide = (data) => {
 
         }
         else {
+            clearInterval(countdown)
             quiz.innerHTML = `<h2>Quiz finished. Your score is ${answerCounter} / 10</h2>`
             updateLocalStorage(answerCounter)
             button.classList.add('hidden')
+            timer.classList.add('hidden')
+
         }
 
     })
@@ -127,18 +130,18 @@ let getPointsFromLocalStorage = () => {
 }
 
 let timerStart = () => {
+
     clearInterval(countdown)
-    timer.innerHTML = `10 s`
 
     let count = 10
+    timer.innerHTML = `${count} s`
 
     countdown = setInterval(() => {
-
-        timer.innerHTML = `${count} s`
         count--
+        timer.innerHTML = `${count} s`
+
         if (count <= 0) {
             clearInterval(countdown)
-            timer.innerHTML = `0 s`
             quiz.innerHTML = `Times out`
         }
     }, 1000)
