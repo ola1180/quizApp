@@ -1,13 +1,18 @@
 const quiz = document.querySelector('.quiz-data')
 const apiUrl = 'https://opentdb.com/api.php?amount=10'
 const button = document.querySelector('.quizButton')
-let pageCounter = 1
 let answerCounter = 0
 let slideIndex = 0
 const localStoragePointsKey = 'quiz-points'
 let localStoragePoints = 0
 let timer = document.querySelector('.timer')
 let countdown = null
+let rankPoints = []
+const localStorageRankPoints = 'rank-points'
+rankButton = document.querySelector('.rank')
+quizContainer = document.querySelector('.quiz')
+rankContainer = document.querySelector('.rank-container')
+let pointsWeight = [{ difficulty: 'easy', weight: 1 }, { difficulty: 'medium', weight: 2 }, { difficulty: 'hard', weight: 3 }]
 
 async function init(apiUrl) {
 
@@ -28,12 +33,11 @@ async function init(apiUrl) {
 
 }
 
-let renderQuestions = ({ question, correct_answer, incorrect_answers: [...allIncorrectAnswers] }) => {
-    console.log(question)
+let renderQuestions = ({ question, correct_answer, difficulty, incorrect_answers: [...allIncorrectAnswers] }) => {
 
     let allAnswers = ([correct_answer, ...allIncorrectAnswers]).map((item, index) => {
 
-        return { answer: item, isCorrect: (index === 0) }
+        return { answer: item, isCorrect: (index === 0), level: difficulty }
 
     })
 
@@ -47,25 +51,38 @@ let renderQuestions = ({ question, correct_answer, incorrect_answers: [...allInc
 
     let questionItem = document.createElement('h3')
     questionItem.textContent = question
+    let questionLevel = document.createElement('h3')
+    questionLevel.textContent = difficulty
+
+
 
     quiz.append(questionItem)
+    quiz.append(questionLevel)
 
-    allAnswers.forEach(({ answer, isCorrect }) => {
+
+    allAnswers.forEach(({ answer, isCorrect, level }) => {
         let answerItem = document.createElement('li')
+
         answerItem.textContent = answer
+
         quiz.append(answerItem)
         answerItem.addEventListener('click', () => {
-            checkAnswer(isCorrect, answerItem)
+            checkAnswer(isCorrect, answerItem, level)
         })
     })
 
 }
 
-let checkAnswer = (isCorrect, answerItem) => {
+let checkAnswer = (isCorrect, answerItem, level) => {
 
     if (isCorrect) {
         answerItem.classList.add('correct-answer');
-        answerCounter += 1;
+
+        pointsWeight.forEach((item) => {
+            if (item.difficulty === level) {
+                answerCounter += item.weight
+            }
+        })
         updateCounter(answerCounter, '.answer-counter');
     }
     else {
@@ -86,12 +103,12 @@ let nextSlide = (data) => {
 
         quiz.innerHTML = ""
 
-        if (pageCounter < 10) {
+        if (slideIndex < 9) {
             timerStart()
-            pageCounter += 1
+            slideIndex += 1
 
-            updateCounter(pageCounter, '.page-counter')
-            renderQuestions(data.results[++slideIndex])
+            updateCounter(slideIndex + 1, '.page-counter')
+            renderQuestions(data.results[slideIndex])
 
         }
         else {
@@ -121,11 +138,26 @@ let updateCounter = (counter, counterContainer) => {
 let updateLocalStorage = (points) => {
     localStoragePoints += points
     localStorage.setItem(localStoragePointsKey, localStoragePoints)
+    rankPoints.push(points)
+    localStorage.setItem(localStorageRankPoints, rankPoints)
 }
 
 let getPointsFromLocalStorage = () => {
     let pointsFromLocalStorage = localStorage.getItem(localStoragePointsKey)
     pointsFromLocalStorage === null ? pointsFromLocalStorage = 0 : localStoragePoints = parseInt(pointsFromLocalStorage)
+    let rankPointsLocalStorage = localStorage.getItem(localStorageRankPoints)
+    if (rankPointsLocalStorage === null) {
+        rankPoints = []
+    }
+    else {
+        let splitedPoints = rankPointsLocalStorage.split(',')
+        splitedPoints = splitedPoints.map((item) => {
+            let parsedItem = parseInt(item)
+            return rankPoints.push(parsedItem)
+        })
+    }
+
+
 
 }
 
@@ -142,12 +174,43 @@ let timerStart = () => {
 
         if (count <= 0) {
             clearInterval(countdown)
-            quiz.innerHTML = `Times out`
+            quiz.innerHTML = `<h2>Times out</h2>`
         }
     }, 1000)
 
 
 }
+
+
+rankButton.addEventListener('click', () => {
+    quizContainer.classList.add('hidden')
+    sortedArray = rankPoints.sort().reverse()
+    let rankRow = document.createElement('tr')
+    let rankCol1 = document.createElement('td')
+    let rankCol2 = document.createElement('td')
+
+    rankCol1.textContent = 'Numer'
+    rankCol2.textContent = 'Liczba punktów'
+    rankRow.append(rankCol1)
+    rankRow.append(rankCol2)
+    rankContainer.append(rankRow)
+    sortedArray.forEach((item, index) => {
+        let rankItemRow = document.createElement('tr')
+        let rankItemCol1 = document.createElement('td')
+        let rankItemCol2 = document.createElement('td')
+        rankItemCol1.textContent = index + 1
+        rankItemCol2.textContent = item
+        rankItemRow.append(rankItemCol1)
+        rankItemRow.append(rankItemCol2)
+        rankContainer.append(rankItemRow)
+
+
+
+    })
+
+
+
+})
 
 
 
