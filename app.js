@@ -13,6 +13,11 @@ rankButton = document.querySelector('.rank')
 quizContainer = document.querySelector('.quiz')
 rankContainer = document.querySelector('.rank-container')
 let pointsWeight = [{ difficulty: 'easy', weight: 1 }, { difficulty: 'medium', weight: 2 }, { difficulty: 'hard', weight: 3 }]
+let weightMap = {
+    "easy": 1,
+    "medium": 2,
+    "hard": 3
+}
 
 async function init(apiUrl) {
 
@@ -78,13 +83,12 @@ let checkAnswer = (isCorrect, answerItem, level) => {
     if (isCorrect) {
         answerItem.classList.add('correct-answer');
 
-        pointsWeight.forEach((item) => {
-            if (item.difficulty === level) {
-                answerCounter += item.weight
-            }
-        })
+        let weight = weightMap[level] ?? 1
+        answerCounter += weight
+
         updateCounter(answerCounter, '.answer-counter');
     }
+
     else {
         answerItem.classList.add('incorrect-answer');
     }
@@ -204,15 +208,9 @@ rankButton.addEventListener('click', () => {
         rankItemRow.append(rankItemCol2)
         rankContainer.append(rankItemRow)
 
-
-
     })
 
-
-
 })
-
-
 
 
 init(apiUrl)
